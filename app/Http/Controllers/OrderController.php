@@ -15,8 +15,7 @@ class OrderController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'user_id' => 'required|integer',
-            'total' => 'required|numeric',
+            'total_price' => 'required|numeric',
         ]);
 
         $order = Order::create($request->all());
@@ -26,7 +25,7 @@ class OrderController extends Controller
 
     public function show($id)
     {
-        return Order::with('products')->findOrFail($id); // Incluyendo los productos relacionados
+        return Order::with('products')->findOrFail($id); 
     }
 
     public function update(Request $request, $id)

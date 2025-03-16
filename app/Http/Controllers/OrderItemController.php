@@ -13,7 +13,6 @@ class OrderItemController extends Controller
             'order_id' => 'required|exists:orders,id',
             'product_id' => 'required|exists:products,id',
             'quantity' => 'required|integer|min:1',
-            'subtotal' => 'required|numeric',
         ]);
 
         $orderItem = OrderItem::create($request->all());
