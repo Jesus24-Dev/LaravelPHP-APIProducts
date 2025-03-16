@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->enum('status', ['pending', 'processing', 'completed', 'declined']);
-            $table->decimal('total_price', 10, 2)->check('total_price >= 0');
+            $table->decimal('total_price', 10, 2)->check('total_price >= 0')->default(0);
             $table->timestamps();
         });
     }
