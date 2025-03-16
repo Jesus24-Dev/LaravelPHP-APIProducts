@@ -9,39 +9,58 @@ class CategoryController extends Controller
 {
     public function index()
     {
-        return Category::all();
+        return response()->json(Category::all(), 200);
     }
 
     public function store(Request $request)
     {
-
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'required|string|max:255|unique:categories,name',
         ]);
 
         $category = Category::create($request->all());
 
-        return response()->json($category, 201);
+        return response()->json(['message' => 'Category created', 'category' => $category], 201);
     }
 
     public function show($id)
     {
-        return Category::findOrFail($id);
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['error' => 'Category not found'], 404);
+        }
+
+        return response()->json($category, 200);
     }
 
     public function update(Request $request, $id)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['error' => 'Category not found'], 404);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255|unique:categories,name,' . $id,
+        ]);
+
         $category->update($request->all());
 
-        return response()->json($category);
+        return response()->json(['message' => 'Category updated', 'category' => $category], 200);
     }
 
     public function destroy($id)
     {
-        $category = Category::findOrFail($id);
+        $category = Category::find($id);
+
+        if (!$category) {
+            return response()->json(['error' => 'Category not found'], 404);
+        }
+
         $category->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Category deleted'], 204);
     }
 }

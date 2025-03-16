@@ -17,27 +17,47 @@ class OrderItemController extends Controller
 
         $orderItem = OrderItem::create($request->all());
 
-        return response()->json($orderItem, 201);
+        return response()->json(['message' => 'Order item created', 'orderItem' => $orderItem], 201);
     }
 
     public function show($id)
     {
-        return OrderItem::findOrFail($id);
+        $orderItem = OrderItem::find($id);
+
+        if (!$orderItem) {
+            return response()->json(['error' => 'Order item not found'], 404);
+        }
+
+        return response()->json($orderItem, 200);
     }
 
     public function update(Request $request, $id)
     {
-        $orderItem = OrderItem::findOrFail($id);
+        $orderItem = OrderItem::find($id);
+
+        if (!$orderItem) {
+            return response()->json(['error' => 'Order item not found'], 404);
+        }
+
+        $request->validate([
+            'quantity' => 'required|integer|min:1',
+        ]);
+
         $orderItem->update($request->all());
 
-        return response()->json($orderItem);
+        return response()->json(['message' => 'Order item updated', 'orderItem' => $orderItem], 200);
     }
 
     public function destroy($id)
     {
-        $orderItem = OrderItem::findOrFail($id);
+        $orderItem = OrderItem::find($id);
+
+        if (!$orderItem) {
+            return response()->json(['error' => 'Order item not found'], 404);
+        }
+
         $orderItem->delete();
 
-        return response()->json(null, 204);
+        return response()->json(['message' => 'Order item deleted'], 204);
     }
 }
