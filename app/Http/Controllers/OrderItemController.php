@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\OrderItem;
+use App\Models\Order;
+use App\Models\Product;
 use Illuminate\Http\Request;
 
 class OrderItemController extends Controller
@@ -15,49 +17,69 @@ class OrderItemController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $orderItem = OrderItem::create($request->all());
+        $product = Product::findOrFail($request->product_id);
 
-        return response()->json(['message' => 'Order item created', 'orderItem' => $orderItem], 201);
-    }
+        $subtotal = $product->price * $request->quantity;
+ 
+        $orderItem = OrderItem::create([
+            'order_id' => $request->order_id,
+            'product_id' => $request->product_id,
+            'quantity' => $request->quantity,
+            'subtotal' => $subtotal
+        ]);
 
-    public function show($id)
-    {
-        $orderItem = OrderItem::find($id);
+        $product->decrement('quantity', $request->quantity);
 
-        if (!$orderItem) {
-            return response()->json(['error' => 'Order item not found'], 404);
-        }
+        $this->updateOrderTotal($request->order_id);
 
-        return response()->json($orderItem, 200);
+        return response()->json($orderItem, 201);
     }
 
     public function update(Request $request, $id)
     {
-        $orderItem = OrderItem::find($id);
+        $orderItem = OrderItem::findOrFail($id);
+        $product = Product::findOrFail($orderItem->product_id);
 
-        if (!$orderItem) {
-            return response()->json(['error' => 'Order item not found'], 404);
-        }
+
+        $product->increment('quantity', $orderItem->quantity);
 
         $request->validate([
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $orderItem->update($request->all());
+        $newSubtotal = $product->price * $request->quantity;
 
-        return response()->json(['message' => 'Order item updated', 'orderItem' => $orderItem], 200);
+        $orderItem->update([
+            'quantity' => $request->quantity,
+            'subtotal' => $newSubtotal,
+        ]);
+
+        $product->decrement('quantity', $request->quantity);
+
+        $this->updateOrderTotal($orderItem->order_id);
+
+        return response()->json($orderItem);
     }
 
     public function destroy($id)
     {
-        $orderItem = OrderItem::find($id);
+        $orderItem = OrderItem::findOrFail($id);
+        $product = Product::findOrFail($orderItem->product_id);
 
-        if (!$orderItem) {
-            return response()->json(['error' => 'Order item not found'], 404);
-        }
+        $product->increment('quantity', $orderItem->quantity);
+
+        $orderId = $orderItem->order_id;
 
         $orderItem->delete();
 
-        return response()->json(['message' => 'Order item deleted'], 204);
+        $this->updateOrderTotal($orderId);
+
+        return response()->json(null, 204);
+    }
+
+    private function updateOrderTotal($orderId)
+    {
+        $total = OrderItem::where('order_id', $orderId)->sum('subtotal');
+        Order::where('id', $orderId)->update(['total_price' => $total]);
     }
 }
