@@ -7,10 +7,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
+
+    use HasFactory;
+
     protected $fillable = ['status'];
 
     public function orderItems()
     {
-        return $this->hasMany(Order::class);
+        return $this->hasMany(OrderItem::class);
     }
 }
