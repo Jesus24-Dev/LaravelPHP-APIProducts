@@ -41,13 +41,13 @@ Esta es una API RESTful desarrollada con Laravel para la gestión de productos, 
 1. Clona el repositorio:
 
 ```bash
-	git clone https://github.com/tu-usuario/tu-repositorio.git
-    cd tu-repositorio
+git clone https://github.com/tu-usuario/tu-repositorio.git
+cd tu-repositorio
 ```
     
 2. Instala las dependencias:
 ``` bash
-	composer install
+composer install
 ```
 
 3. Configura el archivo `.env`:
@@ -58,22 +58,22 @@ Esta es una API RESTful desarrollada con Laravel para la gestión de productos, 
         
 4. Genera la clave de la aplicación:
 ``` bash
-	php artisan key:generate
+php artisan key:generate
 ```
     
 5. Ejecuta las migraciones y seeders:
-    ``` bash
-	php artisan migrate --seed
+``` bash
+php artisan migrate --seed
 ```   
     
 6. Instala Laravel Sanctum:
-    ``` bash
-	php artisan sanctum:install
+``` bash
+php artisan sanctum:install
 ```  
     
 7. Inicia el servidor de desarrollo:
-    ``` bash
-	php artisan serve
+``` bash
+php artisan serve
 ```
 
 
@@ -177,16 +177,16 @@ La API utiliza Laravel Sanctum para la autenticación. Para acceder a los endpoi
 **Request**:
 
 ```json
-POST /api/products
-Headers:
-    Authorization: Bearer {token}
-    Content-Type: application/json
-Body:
-{
-    "name": "Producto 1",
-    "price": 100.00,
-    "category_id": 1
-}
+    POST /api/products
+    Headers:
+        Authorization: Bearer {token}
+        Content-Type: application/json
+    Body:
+    {
+        "name": "Producto 1",
+        "price": 100.00,
+        "category_id": 1
+    }
 ```
 
 **Response**:
