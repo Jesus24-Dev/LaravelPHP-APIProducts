@@ -4,66 +4,83 @@ namespace App\Http\Controllers;
 
 use App\Models\Product;
 use Illuminate\Http\Request;
+use App\Http\Requests\StoreProductRequest;
+use App\Http\Requests\UpdateProductRequest;
+use Exception;
 
 class ProductController extends Controller
 {
     public function index()
     {
-        return response()->json(Product::all(), 200);
+        try {
+            $products = Product::all();
+            return response()->json($products, 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener productos', 'message' => $e->getMessage()], 500);
+        }
     }
 
     public function show($id)
     {
-        $product = Product::find($id);
+        try {
+            $product = Product::find($id);
 
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
+            if (!$product) {
+                return response()->json(['error' => 'Producto no encontrado'], 404);
+            }
+
+            return response()->json($product, 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al obtener el producto', 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json($product, 200);
     }
 
-    public function store(Request $request)
+    public function store(StoreProductRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255|unique:products,name',
-            'price' => 'required|numeric|min:0',
-            'category_id' => 'required|exists:categories,id',
-        ]);
-
-        $product = Product::create($request->all());
-
-        return response()->json(['message' => 'Product created', 'product' => $product], 201);
+        try {
+            $product = Product::create($request->validated());
+            return response()->json($product, 201);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al crear el producto', 'message' => $e->getMessage()], 500);
+        }
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateProductRequest $request, $id)
     {
-        $product = Product::find($id);
+        try {
+            $product = Product::find($id);
 
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
+            if (!$product) {
+                return response()->json(['error' => 'Producto no encontrado'], 404);
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255|unique:products,name,' . $id,
+                'price' => 'required|numeric|min:0',
+            ]);
+
+            $product->update($request->validated());
+
+            return response()->json(['message' => 'Producto actualizado', 'product' => $product], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al actualizar el producto', 'message' => $e->getMessage()], 500);
         }
-
-        $request->validate([
-            'name' => 'required|string|max:255|unique:products,name,' . $id,
-            'price' => 'required|numeric|min:0',
-        ]);
-
-        $product->update($request->all());
-
-        return response()->json(['message' => 'Product updated', 'product' => $product], 200);
     }
 
     public function destroy($id)
     {
-        $product = Product::find($id);
+        try {
+            $product = Product::find($id);
 
-        if (!$product) {
-            return response()->json(['error' => 'Product not found'], 404);
+            if (!$product) {
+                return response()->json(['error' => 'Producto no encontrado'], 404);
+            }
+
+            $product->delete();
+
+            return response()->json(['message' => 'Producto eliminado'], 200);
+        } catch (Exception $e) {
+            return response()->json(['error' => 'Error al eliminar el producto', 'message' => $e->getMessage()], 500);
         }
-
-        $product->delete();
-
-        return response()->json(['message' => 'Product deleted'], 204);
     }
 }
