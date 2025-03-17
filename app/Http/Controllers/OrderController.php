@@ -3,64 +3,89 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
-use Illuminate\Http\Request;
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
+use Exception;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        return response()->json(Order::all(), 200);
+        try {
+            $orders = Order::all();
+            return $this->successResponse($orders, 'Órdenes obtenidas correctamente');
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al obtener órdenes', $e->getMessage());
+        }
     }
 
-    public function store(Request $request)
+    public function store(StoreOrderRequest $request)
     {
-        $request->validate([
-            'total_price' => 'required|numeric|min:0',
-        ]);
-
-        $order = Order::create($request->all());
-
-        return response()->json(['message' => 'Order created', 'order' => $order], 201);
+        try {
+            $order = Order::create($request->validated());
+            return $this->successResponse($order, 'Orden creada correctamente', 201);
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al crear la orden', $e->getMessage());
+        }
     }
 
     public function show($id)
     {
-        $order = Order::with('products')->find($id);
-
-        if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
+        try {
+            $order = $this->findOrder($id);
+            $order->load('products'); 
+            return $this->successResponse($order, 'Orden obtenida correctamente');
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al obtener la orden', $e->getMessage());
         }
-
-        return response()->json($order, 200);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateOrderRequest $request, $id)
     {
-        $order = Order::find($id);
-
-        if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
+        try {
+            $order = $this->findOrder($id);
+            $order->update($request->validated());
+            return $this->successResponse($order, 'Orden actualizada correctamente');
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al actualizar la orden', $e->getMessage());
         }
-
-        $request->validate([
-            'total_price' => 'required|numeric|min:0',
-        ]);
-
-        $order->update($request->all());
-
-        return response()->json(['message' => 'Order updated', 'order' => $order], 200);
     }
 
     public function destroy($id)
     {
-        $order = Order::find($id);
-
-        if (!$order) {
-            return response()->json(['error' => 'Order not found'], 404);
+        try {
+            $order = $this->findOrder($id);
+            $order->delete();
+            return $this->successResponse(null, 'Orden eliminada correctamente', 204);
+        } catch (Exception $e) {
+            return $this->errorResponse('Error al eliminar la orden', $e->getMessage());
         }
+    }
 
-        $order->delete();
+    private function findOrder($id)
+    {
+        $order = Order::find($id);
+        if (!$order) {
+            throw new Exception('Orden no encontrada');
+        }
+        return $order;
+    }
 
-        return response()->json(['message' => 'Order deleted'], 204);
+    private function successResponse($data = null, $message = '', $statusCode = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $statusCode);
+    }
+
+    private function errorResponse($error, $message, $statusCode = 500)
+    {
+        return response()->json([
+            'success' => false,
+            'error' => $error,
+            'message' => $message,
+        ], $statusCode);
     }
 }

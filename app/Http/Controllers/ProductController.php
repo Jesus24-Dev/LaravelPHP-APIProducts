@@ -14,24 +14,19 @@ class ProductController extends Controller
     {
         try {
             $products = Product::all();
-            return response()->json($products, 200);
+            return $this->successResponse($products, 'Productos obtenidos correctamente');
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al obtener productos', 'message' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener productos', $e->getMessage());
         }
     }
 
     public function show($id)
     {
         try {
-            $product = Product::find($id);
-
-            if (!$product) {
-                return response()->json(['error' => 'Producto no encontrado'], 404);
-            }
-
-            return response()->json($product, 200);
+            $product = $this->findProduct($id);
+            return $this->successResponse($product, 'Producto obtenido correctamente');
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al obtener el producto', 'message' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al obtener el producto', $e->getMessage());
         }
     }
 
@@ -39,48 +34,58 @@ class ProductController extends Controller
     {
         try {
             $product = Product::create($request->validated());
-            return response()->json($product, 201);
+            return $this->successResponse($product, 'Producto creado correctamente', 201);
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al crear el producto', 'message' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al crear el producto', $e->getMessage());
         }
     }
 
     public function update(UpdateProductRequest $request, $id)
     {
         try {
-            $product = Product::find($id);
-
-            if (!$product) {
-                return response()->json(['error' => 'Producto no encontrado'], 404);
-            }
-
-            $request->validate([
-                'name' => 'required|string|max:255|unique:products,name,' . $id,
-                'price' => 'required|numeric|min:0',
-            ]);
-
+            $product = $this->findProduct($id);
             $product->update($request->validated());
-
-            return response()->json(['message' => 'Producto actualizado', 'product' => $product], 200);
+            return $this->successResponse($product, 'Producto actualizado correctamente');
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al actualizar el producto', 'message' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al actualizar el producto', $e->getMessage());
         }
     }
 
     public function destroy($id)
     {
         try {
-            $product = Product::find($id);
-
-            if (!$product) {
-                return response()->json(['error' => 'Producto no encontrado'], 404);
-            }
-
+            $product = $this->findProduct($id);
             $product->delete();
-
-            return response()->json(['message' => 'Producto eliminado'], 200);
+            return $this->successResponse(null, 'Producto eliminado correctamente');
         } catch (Exception $e) {
-            return response()->json(['error' => 'Error al eliminar el producto', 'message' => $e->getMessage()], 500);
+            return $this->errorResponse('Error al eliminar el producto', $e->getMessage());
         }
+    }
+
+    private function findProduct($id)
+    {
+        $product = Product::find($id);
+        if (!$product) {
+            throw new Exception('Producto no encontrado');
+        }
+        return $product;
+    }
+
+    private function successResponse($data = null, $message = '', $statusCode = 200)
+    {
+        return response()->json([
+            'success' => true,
+            'message' => $message,
+            'data' => $data,
+        ], $statusCode);
+    }
+
+    private function errorResponse($error, $message, $statusCode = 500)
+    {
+        return response()->json([
+            'success' => false,
+            'error' => $error,
+            'message' => $message,
+        ], $statusCode);
     }
 }
